@@ -1,10 +1,11 @@
 package com.store.storeapplication.Service;
 
-import com.store.storeapplication.Entity.Category;
-import com.store.storeapplication.Repository.CategoryRepository;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.store.storeapplication.Entity.Category;
+import com.store.storeapplication.Repository.CategoryRepository;
 
 @Service
 public class CategoryService {
@@ -40,4 +41,5 @@ public class CategoryService {
         }
         categoryRepository.deleteById(id);
     }
+
 }

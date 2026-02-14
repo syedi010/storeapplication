@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Store Admin Panel</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+
+body{
+    display:flex;
+    min-height:100vh;
+    background:linear-gradient(135deg,#141e30,#243b55);
+    color:white;
+}
+
+/* Sidebar */
+.sidebar{
+    width:220px;
+    background:rgba(0,0,0,0.4);
+    backdrop-filter:blur(10px);
+    padding:20px;
+}
+
+.sidebar h2{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.sidebar button{
+    width:100%;
+    padding:12px;
+    margin-bottom:15px;
+    border:none;
+    border-radius:8px;
+    background:#667eea;
+    color:white;
+    cursor:pointer;
+    transition:0.3s;
+    font-weight:bold;
+}
+
+.sidebar button:hover{
+    background:#5563c1;
+    transform:scale(1.05);
+}
+
+/* Main Content */
+.main{
+    flex:1;
+    padding:30px;
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+/* Cards */
+.card{
+    background:rgba(255,255,255,0.1);
+    padding:20px;
+    border-radius:15px;
+    margin-bottom:25px;
+    box-shadow:0 15px 30px rgba(0,0,0,0.4);
+    backdrop-filter:blur(15px);
+    animation:fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(20px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+.card h2{
+    margin-bottom:15px;
+}
+
+input,select{
+    width:100%;
+    padding:10px;
+    margin-bottom:10px;
+    border:none;
+    border-radius:6px;
+}
+
+button.action{
+    background:#00c6ff;
+    margin-bottom:10px;
+}
+
+button.action:hover{
+    background:#0099cc;
+}
+
+ul{
+    list-style:none;
+    margin-top:10px;
+}
+
+li{
+    background:rgba(255,255,255,0.2);
+    padding:8px;
+    margin-bottom:6px;
+    border-radius:6px;
+}
+
+footer{
+    margin-top:20px;
+    font-size:13px;
+    opacity:0.8;
+}
+.hidden{display:none;}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>🚀 Admin</h2>
+    <button onclick="showSection('category')">📦 Categories</button>
+    <button onclick="showSection('product')">🛍 Products</button>
+    <button onclick="showSection('user')">👤 Users</button>
+</div>
+
+<div class="main">
+    <h1>Store Management Dashboard</h1>
+
+    <!-- CATEGORY -->
+    <div id="category" class="card">
+        <h2>📦 Category</h2>
+        <input id="categoryName" placeholder="Enter category name">
+        <button class="action" onclick="addCategory()">Add Category</button>
+        <button class="action" onclick="getCategories()">Load Categories</button>
+        <ul id="categoryList"></ul>
+    </div>
+
+    <!-- PRODUCT -->
+    <div id="product" class="card hidden">
+        <h2>🛍 Product</h2>
+        <input id="productName" placeholder="Product name">
+        <input id="productPrice" placeholder="Price">
+        <input id="productDescription" placeholder="Description">
+        <select id="productCategory"></select>
+        <button class="action" onclick="addProduct()">Add Product</button>
+        <button class="action" onclick="getProducts()">Load Products</button>
+        <ul id="productList"></ul>
+    </div>
+
+    <!-- USER -->
+    <div id="user" class="card hidden">
+        <h2>👤 User</h2>
+        <input id="userName" placeholder="User name">
+        <input id="userEmail" placeholder="Email">
+        <input id="userPassword" type="password" placeholder="Password">
+        <button class="action" onclick="addUser()">Register User</button>
+        <button class="action" onclick="getUsers()">Load Users</button>
+        <ul id="userList"></ul>
+    </div>
+
+    <footer>© 2026 Store Admin Panel • Spring Boot Project</footer>
+</div>
+
+<script>
+
+function showSection(id){
+    document.getElementById("category").classList.add("hidden");
+    document.getElementById("product").classList.add("hidden");
+    document.getElementById("user").classList.add("hidden");
+    document.getElementById(id).classList.remove("hidden");
+}
+
+/* CATEGORY */
+function addCategory(){
+    fetch("/api/categories/addCategory",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({data:{name:categoryName.value}})
+    }).then(r=>r.json())
+      .then(r=>{alert(r.message);getCategories();});
+}
+
+function getCategories(){
+    fetch("/api/categories/getAllCategories")
+    .then(r=>r.json())
+    .then(r=>{
+        categoryList.innerHTML="";
+        r.data.forEach(c=>categoryList.innerHTML+=`<li>${c.name}</li>`);
+        loadProductCategories();
+    });
+}
+
+/* PRODUCT */
+function loadProductCategories(){
+    fetch("/api/categories/getAllCategories")
+    .then(r=>r.json())
+    .then(r=>{
+        productCategory.innerHTML="";
+        r.data.forEach(c=>productCategory.innerHTML+=`<option value="${c.id}">${c.name}</option>`);
+    });
+}
+
+function addProduct(){
+    fetch("/api/products/addProduct",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({data:{
+            name:productName.value,
+            price:productPrice.value,
+            description:productDescription.value,
+            category:{id:productCategory.value}
+        }})
+    }).then(r=>r.json())
+      .then(r=>{alert(r.message);getProducts();});
+}
+
+function getProducts(){
+    fetch("/api/products/getAllProducts")
+    .then(r=>r.json())
+    .then(r=>{
+        productList.innerHTML="";
+        r.data.forEach(p=>productList.innerHTML+=`<li>${p.name} - ₹${p.price}</li>`);
+    });
+}
+
+/* USER */
+function addUser(){
+    fetch("/api/users",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+            name:userName.value,
+            email:userEmail.value,
+            password:userPassword.value
+        })
+    }).then(r=>r.json())
+      .then(r=>{alert(r.message);getUsers();});
+}
+
+function getUsers(){
+    fetch("/api/users")
+    .then(r=>r.json())
+    .then(r=>{
+        userList.innerHTML="";
+        r.data.forEach(u=>userList.innerHTML+=`<li>${u.name} (${u.email})</li>`);
+    });
+}
+
+</script>
+
+</body>
+</html>

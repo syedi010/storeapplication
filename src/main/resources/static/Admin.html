@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Store Admin Panel</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+
+body{
+    min-height:100vh;
+    background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+    padding:40px;
+    color:white;
+}
+
+/* Title */
+h1{
+    text-align:center;
+    margin-bottom:40px;
+    font-size:36px;
+    letter-spacing:1px;
+}
+
+/* Card Navigation */
+.cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:25px;
+    margin-bottom:40px;
+}
+
+.card{
+    padding:30px;
+    border-radius:18px;
+    background:rgba(255,255,255,0.12);
+    backdrop-filter:blur(15px);
+    cursor:pointer;
+    text-align:center;
+    transition:0.4s;
+    position:relative;
+    overflow:hidden;
+}
+
+.card:hover{
+    transform:translateY(-10px) scale(1.05);
+    box-shadow:0 20px 40px rgba(0,0,0,0.6);
+}
+
+.card::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:-100%;
+    width:100%;
+    height:100%;
+    background:linear-gradient(120deg,transparent,rgba(255,255,255,0.4),transparent);
+    transition:0.6s;
+}
+
+.card:hover::before{
+    left:100%;
+}
+
+.card span{
+    font-size:40px;
+    display:block;
+    margin-bottom:15px;
+}
+
+/* Sections */
+.section{
+    display:none;
+    background:rgba(255,255,255,0.1);
+    padding:25px;
+    border-radius:20px;
+    backdrop-filter:blur(20px);
+    animation:fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(20px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+.section h2{
+    margin-bottom:20px;
+}
+
+/* Inputs */
+input,select{
+    width:100%;
+    padding:12px;
+    border-radius:8px;
+    border:none;
+    margin-bottom:12px;
+    font-size:14px;
+}
+
+/* Buttons */
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    margin-bottom:10px;
+    transition:0.3s;
+}
+
+button:hover{
+    transform:translateY(-3px);
+    box-shadow:0 15px 25px rgba(0,0,0,0.5);
+}
+
+/* List */
+ul{list-style:none;margin-top:15px;}
+
+li{
+    background:rgba(255,255,255,0.2);
+    padding:10px;
+    border-radius:8px;
+    margin-bottom:6px;
+    font-size:14px;
+}
+
+
+</style>
+</head>
+
+<body>
+
+<h1>🚀 Store Admin Dashboard</h1>
+
+<div class="cards">
+    <div class="card" onclick="showSection('category')">
+        <span>📦</span>Manage Categories
+    </div>
+    <div class="card" onclick="showSection('product')">
+        <span>🛍</span>Manage Products
+    </div>
+    <div class="card" onclick="showSection('user')">
+        <span>👤</span>Manage Users
+    </div>
+</div>
+
+<!-- CATEGORY -->
+<div id="category" class="section">
+    <h2>📦 Categories</h2>
+    <input id="categoryName" placeholder="Category Name">
+    <button onclick="addCategory()">Add Category</button>
+    <button onclick="getCategories()">Load Categories</button>
+    <button onclick="clearCategory()">Clear</button>
+    <ul id="categoryList"></ul>
+</div>
+
+<!-- PRODUCT -->
+<div id="product" class="section">
+    <h2>🛍 Products</h2>
+    <input id="productName" placeholder="Product Name">
+    <input id="productPrice" placeholder="Price">
+    <input id="productDescription" placeholder="Description">
+    <select id="productCategory">
+     <option value="">-- Select Category --</option></select>
+    <button onclick="addProduct()">Add Product</button>
+    <button onclick="getProducts()">Load Products</button>
+    <button onclick="clearProduct()">Clear</button>
+    <ul id="productList"></ul>
+</div>
+
+<!-- USER -->
+<div id="user" class="section">
+    <h2>👤 Users</h2>
+    <input id="userName" placeholder="User Name">
+    <input id="userEmail" placeholder="Email">
+    <input id="userPassword" type="password" placeholder="Password">
+    <button onclick="addUser()">Register User</button>
+    <button onclick="getUsers()">Load Users</button>
+    <button onclick="clearUser()">Clear</button>
+    <ul id="userList"></ul>
+</div>
+
+<script>
+
+function showSection(id){
+    document.querySelectorAll('.section')
+        .forEach(s=>s.style.display="none");
+
+    document.getElementById(id).style.display="block";
+
+    if(id === "product"){
+        loadProductCategories();
+    }
+}
+
+/* CATEGORY */
+function addCategory(){
+    fetch("/api/categories/addCategory",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({data:{name:categoryName.value}})
+    }).then(r=>r.json())
+      .then(r=>{alert(r.message);getCategories();});
+}
+
+function loadProductCategories(){
+    fetch("/api/categories/getAllCategories")
+    .then(r=>r.json())
+    .then(r=>{
+        productCategory.innerHTML="<option value=''>-- Select Category --</option>";
+        r.data.forEach(c=>{
+            productCategory.innerHTML += 
+                `<option value="${c.id}">${c.name}</option>`;
+        });
+    });
+}
+
+function clearCategory(){
+    categoryName.value = "";
+    categoryList.innerHTML = "";
+}
+
+function clearProduct(){
+    productName.value = "";
+    productPrice.value = "";
+    productDescription.value = "";
+    productCategory.value = "";
+    productList.innerHTML = "";
+}
+
+function clearUser(){
+    userName.value = "";
+    userEmail.value = "";
+    userPassword.value = "";
+    userList.innerHTML = "";
+}
+
+function addProduct(){
+    fetch("/api/products/addProduct",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({data:{
+            name:productName.value,
+            price:productPrice.value,
+            description:productDescription.value,
+            category:{id:productCategory.value}
+        }})
+    }).then(r=>r.json())
+      .then(r=>{alert(r.message);getProducts();});
+}
+
+function getProducts(){
+    fetch("/api/products/getAllProducts")
+    .then(r=>r.json())
+    .then(r=>{
+        productList.innerHTML="";
+        r.data.forEach(p=>productList.innerHTML+=`<li>${p.name} - ₹${p.price}</li>`);
+    });
+}
+
+function getCategories(){
+    fetch("/api/categories/getAllCategories")
+    .then(r=>r.json())
+    .then(r=>{
+        categoryList.innerHTML="";
+        r.data.forEach(c=>{
+            categoryList.innerHTML += `<li>${c.name}</li>`;
+        });
+    })
+    .catch(err=>{
+        console.error("Error loading categories:", err);
+    });
+}
+
+/* USER */
+function addUser(){
+    fetch("/api/users",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+            name:userName.value,
+            email:userEmail.value,
+            password:userPassword.value
+        })
+    }).then(r=>r.json())
+      .then(r=>{alert(r.message);getUsers();});
+}
+
+function getUsers(){
+    fetch("/api/users")
+    .then(r=>r.json())
+    .then(r=>{
+        userList.innerHTML="";
+        r.data.forEach(u=>userList.innerHTML+=`<li>${u.name} (${u.email})</li>`);
+    });
+}
+
+</script>
+
+</body>
+</html>
